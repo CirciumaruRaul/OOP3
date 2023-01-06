@@ -20,16 +20,45 @@ void Clear()
     #endif
 }
 
+template <class T>
+class Repository
+{
+protected:
+    vector<T*> elemente;
+public:
+    void AdaugaElement(T* element)
+    {
+        this->elemente.push_back(element);
+    }
+    void StergeElement(T* element)
+    {
+        typename vector<T*>::iterator it;
+        for (it = this->elemente.begin(); it != this->elemente.end(); it++)
+        {
+            if (*it == element)
+            {
+                this->elemente.erase(it);
+                break;
+            }
+        }
+    }
+    void StergeElement(int pozitie)
+    {
+        this->elemente.erase(this->elemente.begin() + pozitie);
+    }
+};
+
 template<class T>
 void Citire(T& x)
 {
     cin >> x;
 }
+
 template<typename Container>
 void delete_them(Container& c) { 
     while(!c.empty()){
         delete c.back();
-        c.pop_back();
+
     }
 }
 
@@ -364,7 +393,7 @@ public:
     void print(){cout<<"poate3";}
     ~ElectroAcoustic(){}
 };
-class MeniuSingleton
+class MeniuSingleton:public Repository<Obiecte>
 {
 private:
     static MeniuSingleton *obiect;
@@ -378,6 +407,7 @@ public:
     }
     void MainMenu()
     {
+        Repository R;
         Acoustica ac;
         Amplificator a;
         AmplificatorCuBoxa acb;
@@ -393,6 +423,9 @@ public:
         v.push_back(&a);
         v.push_back(&acb);
         v.push_back(&e);
+        R.AdaugaElement(&a);
+        R.AdaugaElement(&acb);
+        R.AdaugaElement(&e);
         map<string,int> Stoc;
         Stoc["Amplificator"] = 1;
         Stoc["AmplificatorCuBoxa"] = 1;
@@ -439,6 +472,7 @@ public:
                             cin.clear();
                         }
                         v.push_back(&*Am);
+                        R.AdaugaElement(&*Am);
                         Stoc["Amplificator"] ++;
                         Clear();
                     }
@@ -456,6 +490,7 @@ public:
                             cin.clear();
                         }
                         v.push_back(&*ACB);
+                        R.AdaugaElement(&*ACB);
                         Stoc["AmplificatorCuBoxa"]++;
                         Clear();
                     }
@@ -473,6 +508,7 @@ public:
                             cin.clear();
                         }
                         v.push_back(&*E);
+                        R.AdaugaElement(&*E);
                         Stoc["Electrica"]++;
                         Clear();
                     }
@@ -489,7 +525,8 @@ public:
                             cout<<"Datele nu corespund!\n";
                             cin.clear();
                         }
-                        v.push_back(*&EA);
+                        v.push_back(&*EA);
+                        R.AdaugaElement(*&EA);
                         Stoc["ElectroAcoustica"]++;
                         Clear();
                     }
@@ -508,6 +545,7 @@ public:
                             cin.clear();
                         }
                         v.push_back(&*A);
+                        R.AdaugaElement(&*A);
                         Stoc["Acoustica"]++;
                         Clear();
                     }
@@ -538,12 +576,13 @@ public:
                     {
                         cout<<i<<endl<<*v[i]<<endl<<endl;
                     }
-                    cout<<"Cate obiecte vrei sa adaugi in comanda ta?\n";
-                    cin>>i;
+                    cout<<"Ai ales sa adaugi un obiect la comanda!\n";
+                    cin.get();
+                    i = 1;
                     if(i!=0){
                     while(1)
                     {
-                        cout<<"Introdu indexul obiectelor:\n";
+                        cout<<"Introdu indexul obiectului:\n";
                         cin >> j;
                         if(cin){
                             if(j>=0 && j<v.size())
@@ -589,7 +628,7 @@ public:
                         cout<<aux<<endl;
                         cin.get();
                         cin.get();
-                        delete_them(ListaCumparaturi);
+                        ListaCumparaturi.clear();
                         exit(1);
                     }
                     else if (x == "2")
@@ -641,29 +680,57 @@ public:
                         ListaCumparaturi.clear();
                         cout<<"Ai sters singurului obiect din cosul de cumparaturi!\n";
                     }
-                    else {
+                    else
+                    {
                     list<Obiecte*>::iterator iter;
-                    int j,pozitie = 1;
+                    int i,pozitie = 0;
                     for (iter = ListaCumparaturi.begin(); iter != ListaCumparaturi.end(); ++iter)
                     {
                         cout<<pozitie<<endl<<**iter<<endl;
                         pozitie++;
                     }
-                    cout<<"Cate articole doriti sa stergeti din comanda?\n";
-                    cin>>pozitie;
-                    while(pozitie != 0)
+                    cout<<"Te rog, selecteaza indexul obiectului pe care il doresti sa il stergi!\n";
+                    cin>>i;
+                    if(i>=0 && i < ListaCumparaturi.size())
                     {
-                        cout<<"Te rog, selecteaza indexul obiectelor pe care il doresti sa il stergi!\n";
-                        cin>>j;
-                        auto it = ListaCumparaturi.begin();
-                        advance(it,j);
-                        delete *it;
-                        ListaCumparaturi.erase(it);
-                        pozitie++;
+                        for (iter = ListaCumparaturi.begin(); iter != ListaCumparaturi.end(); ++iter)
+                            if(i == 0)
+                                break;
+                            else
+                                i--;
+                        v.push_back(*iter);
+                        R.AdaugaElement(*iter);
+                        int n = v.size();
+                        if(dynamic_cast<Amplificator*>(v[n-1]))
+                        {
+                            Stoc["Amplificator"]++;
+                        }
+                        else if(dynamic_cast<AmplificatorCuBoxa*>(v[n-1]))
+                        {
+                            Stoc["AmplificatorCuBoxa"]++;
+                        }
+                        else if(dynamic_cast<Acoustica*>(v[n-1]))
+                        {
+                            Stoc["Acoustica"]++;
+                        }
+                        else if(dynamic_cast<Electrica*>(v[n-1]))
+                        {
+                            Stoc["Electrica"]++;
+                        }
+                        else if(dynamic_cast<ElectroAcoustic*>(v[n-1]))
+                        {
+                            Stoc["ElectroAcoustica"]++;
+                        }
+                        ListaCumparaturi.erase(iter);
+                        delete *iter;
                     }
+                    else
+                    {
+                        throw i;
                     }
                     cout<<"Apasa enter pentru a revenii la meiniul principal!\n";
                     cin.get();
+                    }
                 }
                 else if(comanda == "0")
                 {
@@ -671,6 +738,11 @@ public:
                 }
                 else
                     throw comanda;
+            }
+            catch(int)
+            {
+                Clear();
+                cout<<"Index out of bounds!\n";
             }
             catch(string da){
                 Clear();
